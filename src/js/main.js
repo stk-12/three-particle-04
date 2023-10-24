@@ -1,5 +1,10 @@
+/**
+* Cottontail rabbit by Poly by Google [CC-BY] via Poly Pizza
+*/
+
 // import { radian, random } from './utils';
 import * as THREE from "three";
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -26,7 +31,9 @@ class Main {
 
     this.mesh = null;
 
-    this.countParticle = 2000;
+    this.countParticle = 2500;
+
+    this.loader = new GLTFLoader();
 
     this.randomMesh = null;
 
@@ -64,6 +71,7 @@ class Main {
   _addMesh() {
     // const geometry = new THREE.BoxGeometry(100, 100, 100);
     const geometry = new THREE.IcosahedronGeometry(200, 5);
+    // const geometry = new THREE.OctahedronGeometry(200, 0);
     const material = new THREE.MeshStandardMaterial({
       color: 0x444444,
       wireframe: true
@@ -72,14 +80,40 @@ class Main {
 
     this.particleCount = this.mesh.geometry.attributes.position.count;
     // this.scene.add(this.mesh);
+
+    this._addParticlesSurface(this.mesh, 'shape01');
+  }
+
+  _addModel() {
+    this.loader.load('model/rabit.glb', (gltf) => {
+      const model = gltf.scene;
+     
+      this.modelMesh = model.children[0];
+
+      // メッシュを拡大
+      this.modelMesh.scale.set(10.0, 10.0, 10.0);
+
+      // メッシュのスケールに合わせて座標データを拡大
+      const positions = this.modelMesh.geometry.attributes.position.array;
+      for (let i = 0; i < positions.length; i += 3) {
+        positions[i] *= 10.0;
+        positions[i + 1] *= 10.0;
+        positions[i + 2] *= 10.0;
+      }
+      // 座標データを更新
+      this.modelMesh.geometry.attributes.position.needsUpdate = true;
+
+      this._addParticlesSurface(this.modelMesh, 'shape02');
+
+    });
   }
 
   _addRandomParticlesMesh() {
     const vertices = [];
     for (let i = 0; i < this.countParticle; i++) {
-      const x = (Math.random() - 0.5) * (window.innerWidth * 1.5);
+      const x = (Math.random() - 0.5) * (window.innerWidth * 1.2);
       const y = (Math.random() - 0.5) * 1000;
-      const z = (Math.random() - 0.5) * 1000;
+      const z = (Math.random() - 0.5) * (window.innerWidth * 1.2);
       vertices.push(x, y, z);
     }
 
@@ -100,14 +134,14 @@ class Main {
     // console.log(this.targetPositions.random);
   }
 
-  _addParticlesSurface() {
-    this.particleSurfaceMaterial = new THREE.PointsMaterial({
+  _addParticlesSurface(mesh, shapeName) {
+    const particleSurfaceMaterial = new THREE.PointsMaterial({
       color: 'red',
-      size: 1.0
+      size: 0.6
     })
 
-    const sampler = new MeshSurfaceSampler(this.mesh).build()
-    this.particleSurfaceGeometry = new THREE.BufferGeometry()
+    const sampler = new MeshSurfaceSampler(mesh).build()
+    const particleSurfaceGeometry = new THREE.BufferGeometry()
     const particlesPosition = new Float32Array(this.countParticle * 3)
 
     for(let i = 0; i < this.countParticle; i++) {
@@ -120,14 +154,14 @@ class Main {
       ], i * 3)
     }
 
-    this.particleSurfaceGeometry.setAttribute('position', new THREE.BufferAttribute(particlesPosition, 3))
+    particleSurfaceGeometry.setAttribute('position', new THREE.BufferAttribute(particlesPosition, 3))
 
-    this.particleSurfaceMesh = new THREE.Points(this.particleSurfaceGeometry, this.particleSurfaceMaterial)
+    const particleSurfaceMesh = new THREE.Points(particleSurfaceGeometry, particleSurfaceMaterial)
 
-    console.log(this.particleSurfaceMesh);
+    console.log(particleSurfaceMesh);
 
     // this.scene.add(this.particlesMesh);
-    this.targetPositions.shape01 = [...this.particleSurfaceGeometry.attributes.position.array];
+    this.targetPositions[shapeName] = [...particleSurfaceGeometry.attributes.position.array];
   }
 
   // 頂点にパーティクルを配置
@@ -135,7 +169,7 @@ class Main {
     // this.particleGeometry = this.mesh.geometry;
     this.particleGeometry = this.randomMesh.geometry;
     this.particleMaterial = new THREE.PointsMaterial({
-      color: "red",
+      color: 0xF7D558,
       size: 3.0
     });
     this.particlesMesh = new THREE.Points(
@@ -185,8 +219,10 @@ class Main {
     this._setCamera();
     this._addMesh();
 
+    this._addModel();
+
     this._addRandomParticlesMesh();
-    this._addParticlesSurface();
+    // this._addParticlesSurface();
     this._initParticlesMesh();
   }
 
@@ -217,11 +253,28 @@ class Main {
         // markers: true,
         onEnter: ()=> {
           console.log('on enter');
-          this._animateParticles(this.targetPositions.random);
+          this._animateParticles(this.targetPositions.shape02);
         },
         onLeaveBack: ()=> {
           console.log('on leaveback');
           this._animateParticles(this.targetPositions.shape01);
+        }
+      }
+    });
+
+    const tl3 = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#section03',
+        start: 'bottom bottom',
+        toggleActions: 'play none none reverse',
+        // markers: true,
+        onEnter: ()=> {
+          console.log('on enter');
+          this._animateParticles(this.targetPositions.random);
+        },
+        onLeaveBack: ()=> {
+          console.log('on leaveback');
+          this._animateParticles(this.targetPositions.shape02);
         }
       }
     });
