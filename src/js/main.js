@@ -1,9 +1,9 @@
-// import '../css/style.scss';
 // import { radian, random } from './utils';
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
+import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+gsap.registerPlugin(ScrollTrigger);
 
 class Main {
   constructor() {
@@ -23,19 +23,20 @@ class Main {
 
     this.scene = new THREE.Scene();
     this.camera = null;
+
     this.mesh = null;
 
-    this.countParticle = 3000;
+    this.countParticle = 2000;
 
     this.randomMesh = null;
 
     this.surfaceMesh = null;
 
-    this.controls = null;
-
     this._init();
     this._update();
     this._addEvent();
+
+    this._setAnimation();
   }
 
   _setCamera() {
@@ -58,14 +59,9 @@ class Main {
     this.scene.add(this.camera);
   }
 
-  _setControlls() {
-    this.controls = new OrbitControls(this.camera, this.canvas);
-    this.controls.enableDamping = true;
-  }
-
   _addMesh() {
     // const geometry = new THREE.BoxGeometry(100, 100, 100);
-    const geometry = new THREE.IcosahedronGeometry(150, 5);
+    const geometry = new THREE.IcosahedronGeometry(200, 5);
     const material = new THREE.MeshStandardMaterial({
       color: 0x444444,
       wireframe: true
@@ -156,8 +152,9 @@ class Main {
       };
 
       gsap.to(intermediateObject, {
-        duration: 1.6,
-        ease: "power4.inOut",
+        duration: 1.2,
+        // ease: "power4.inOut",
+        ease: "expo.out",
         x: targetPositions[i],
         y: targetPositions[i+1],
         z: targetPositions[i+2],
@@ -169,16 +166,16 @@ class Main {
         }
       });
 
-      gsap.to(this.particlesMesh.rotation, {
-        duration: 1.2,
-        y: "+=120",
-      });
+      // gsap.to(this.particlesMesh.rotation, {
+      //   duration: 0.8,
+      //   y: "+=60",
+      //   x: "+=30"
+      // });
     }
   }
 
   _init() {
     this._setCamera();
-    this._setControlls();
     this._addMesh();
 
     this._addRandomParticlesMesh();
@@ -186,16 +183,31 @@ class Main {
     this._addParticlesSurface();
   }
 
-  _update() {
-    // this.mesh.rotation.y += 0.005;
-    // this.mesh.rotation.x += 0.005;
+  _setAnimation() {
 
-    // this.particlesMesh.rotation.y += 0.001;
+    const tl1 = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#section02',
+        start: 'top bottom',
+        toggleActions: 'play none none reverse',
+        // markers: true,
+        onEnter: ()=> {
+          console.log('on enter');
+          this._animateParticles();
+        },
+        onLeaveBack: ()=> {
+          console.log('on leaveback');
+        }
+      }
+    });
+  }
+
+  _update() {
+    this.particlesMesh.rotation.y += 0.001;
     // this.particlesMesh.rotation.x += 0.005;
 
     //レンダリング
     this.renderer.render(this.scene, this.camera);
-    this.controls.update();
     requestAnimationFrame(this._update.bind(this));
   }
 
@@ -214,7 +226,7 @@ class Main {
   _addEvent() {
     window.addEventListener("resize", this._onResize.bind(this));
 
-    window.addEventListener('load', this._animateParticles.bind(this));
+    // window.addEventListener('load', this._animateParticles.bind(this));
   }
 }
 
