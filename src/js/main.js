@@ -32,6 +32,8 @@ class Main {
 
     this.surfaceMesh = null;
 
+    this.targetPositions = {};
+
     this._init();
     this._update();
     this._addEvent();
@@ -92,6 +94,10 @@ class Main {
 
     this.randomMesh = new THREE.Points(geometry, material);
     // this.scene.add(this.randomMesh);
+
+    this.targetPositions.random = [...geometry.attributes.position.array];
+
+    // console.log(this.targetPositions.random);
   }
 
   _addParticlesSurface() {
@@ -121,10 +127,11 @@ class Main {
     console.log(this.particleSurfaceMesh);
 
     // this.scene.add(this.particlesMesh);
+    this.targetPositions.shape01 = [...this.particleSurfaceGeometry.attributes.position.array];
   }
 
   // 頂点にパーティクルを配置
-  _addParticlesMesh() {
+  _initParticlesMesh() {
     // this.particleGeometry = this.mesh.geometry;
     this.particleGeometry = this.randomMesh.geometry;
     this.particleMaterial = new THREE.PointsMaterial({
@@ -138,10 +145,10 @@ class Main {
     this.scene.add(this.particlesMesh);
   }
 
-  _animateParticles() {
+  _animateParticles(targetPositions) {
     // const targetPositions = this.mesh.geometry.attributes.position.array;
-    const targetPositions = this.particleSurfaceMesh.geometry.attributes.position.array;
-    const positions = this.randomMesh.geometry.attributes.position.array;
+    // const targetPositions = this.particleSurfaceMesh.geometry.attributes.position.array;
+    const positions = this.particlesMesh.geometry.attributes.position.array;
 
     for (let i = 0; i < positions.length; i+=3) {
       // アニメーション用中間オブジェクト
@@ -154,7 +161,7 @@ class Main {
       gsap.to(intermediateObject, {
         duration: 1.2,
         // ease: "power4.inOut",
-        ease: "expo.out",
+        ease: "expo.inOut",
         x: targetPositions[i],
         y: targetPositions[i+1],
         z: targetPositions[i+2],
@@ -179,8 +186,8 @@ class Main {
     this._addMesh();
 
     this._addRandomParticlesMesh();
-    this._addParticlesMesh();
     this._addParticlesSurface();
+    this._initParticlesMesh();
   }
 
   _setAnimation() {
@@ -193,17 +200,18 @@ class Main {
         // markers: true,
         onEnter: ()=> {
           console.log('on enter');
-          this._animateParticles();
+          this._animateParticles(this.targetPositions.shape01);
         },
         onLeaveBack: ()=> {
           console.log('on leaveback');
+          this._animateParticles(this.targetPositions.random);
         }
       }
     });
   }
 
   _update() {
-    this.particlesMesh.rotation.y += 0.001;
+    this.particlesMesh.rotation.y += 0.0005;
     // this.particlesMesh.rotation.x += 0.005;
 
     //レンダリング
@@ -225,8 +233,6 @@ class Main {
 
   _addEvent() {
     window.addEventListener("resize", this._onResize.bind(this));
-
-    // window.addEventListener('load', this._animateParticles.bind(this));
   }
 }
 
