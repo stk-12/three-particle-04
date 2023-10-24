@@ -77,7 +77,7 @@ class Main {
   _addRandomParticlesMesh() {
     const vertices = [];
     for (let i = 0; i < this.countParticle; i++) {
-      const x = (Math.random() - 0.5) * 1000;
+      const x = (Math.random() - 0.5) * (window.innerWidth * 1.5);
       const y = (Math.random() - 0.5) * 1000;
       const z = (Math.random() - 0.5) * 1000;
       vertices.push(x, y, z);
@@ -205,6 +205,23 @@ class Main {
         onLeaveBack: ()=> {
           console.log('on leaveback');
           this._animateParticles(this.targetPositions.random);
+        }
+      }
+    });
+
+    const tl2 = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#section03',
+        start: 'top bottom',
+        toggleActions: 'play none none reverse',
+        // markers: true,
+        onEnter: ()=> {
+          console.log('on enter');
+          this._animateParticles(this.targetPositions.random);
+        },
+        onLeaveBack: ()=> {
+          console.log('on leaveback');
+          this._animateParticles(this.targetPositions.shape01);
         }
       }
     });
